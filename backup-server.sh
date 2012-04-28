@@ -56,7 +56,7 @@ mv ${TMP}/TIMESTAMP ${TMP}/${TIMESTAMP}
 
 # Compress
 cd ${TMP}
-tar cjf ${TIMESTAMP}.tar.bz2 ${TIMESTAMP}
+/usr/bin/sudo /bin/tar cjf ${TIMESTAMP}.tar.bz2 ${TIMESTAMP} /var/log
 
 # Encrypt and sign
 echo ${GPGPASSPHRASE} | gpg --homedir ${GPGHOME} \
