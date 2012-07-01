@@ -1,31 +1,29 @@
 #!/bin/sh
 
-# This script is located on the server and is run from either the server's cron
-# or the webserver (i.e. PHP).  It performs a full dump of the database and 
-# stores that in an encrypted + signed + compressed format.  It also clears out
-# any backups that are older than a year.
+# This script is located on the server and is run regularly by cron.  It 
+# performs a dump of the database as well as /var/log.  This is stored in an
+# encrypted, signed and compressed format.  It also clears out any backups that
+# are older than a year.
 
 # Customisable options #########################################################
 
-# Where do you want everything done?  ROOTDIR/{tmp,data,incoming} should already
-# exist and be writable
-ROOTDIR=/backups
+# Where do you want everything done?  ROOTDIR/{tmp,data} should already exist 
+# and be writable by the user invoking this script
+ROOTDIR=/backup
 
 # Make sure important things are in our path
 PATH=/bin:/usr/bin
 
 # Where is the equivalent of ~/.gnupg?
-GPGHOME=/backups/config
+GPGHOME=/backup/config/gnupg
 
-# What are the keyID that we want to encrypt and sign to?
-ENCRYPT_KEYID=0x3ADF8A2C
-SIGN_KEYID=0xB85F31B9
+# What are the keyIDs that we want to encrypt and sign to?
+ENCRYPT_KEYID=0xEEABA323
+SIGN_KEYID=0x7FCE6178
 
-# Read GPG passphrase in for signing key
-GPGPASSPHRASE=`/backups/bin/gpg-passphrase`
-
-# PostgreSQL user with SELECT privileges
-PGUSER=backup
+# MySQL user with SELECT privileges only on the openmrs database
+MYSQLUSER=backup
+MYSQLPASS=password
 
 # Business time ################################################################
 
@@ -38,20 +36,20 @@ TMP=${ROOTDIR}/tmp/${RANDOM}
 mkdir -p ${TMP}
 
 # Dump the database
-pg_dump --file=${TMP}/dump.sql \
-        --blobs \
-        --oids \
-        --no-owner \
-        --no-privileges \
-        --user=${PGUSER} \
-        uamuzibora
+mysqldump -u ${MYSQLUSER} --password=${MYSQLPASS} \
+	  --compact \
+	  --single-transaction \
+          --skip-extended-insert \
+          --order-by-primary \
+          --default-character-set=latin1 \
+          openmrs > ${TMP}/openmrs.sql
 
 # Create a file containing the timestamp
 echo ${TIMESTAMP} > ${TMP}/TIMESTAMP
 
 # Move everything into a timestamped directory, ready for processing
 mkdir ${TMP}/${TIMESTAMP}
-mv ${TMP}/dump.sql ${TMP}/${TIMESTAMP}
+mv ${TMP}/openmrs.sql ${TMP}/${TIMESTAMP}
 mv ${TMP}/TIMESTAMP ${TMP}/${TIMESTAMP}
 
 # Compress
@@ -59,7 +57,7 @@ cd ${TMP}
 /usr/bin/sudo /bin/tar cjf ${TIMESTAMP}.tar.bz2 ${TIMESTAMP} /var/log
 
 # Encrypt and sign
-echo ${GPGPASSPHRASE} | gpg --homedir ${GPGHOME} \
+gpg --homedir ${GPGHOME} \
     --no-verbose \
     --quiet \
     --batch \
@@ -70,7 +68,6 @@ echo ${GPGPASSPHRASE} | gpg --homedir ${GPGHOME} \
     --sign \
     --local-user ${SIGN_KEYID} \
     --always-trust \
-    --passphrase-fd 0 \
     ${TMP}/${TIMESTAMP}.tar.bz2
 
 # Move to data directory
