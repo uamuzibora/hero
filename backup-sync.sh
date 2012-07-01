@@ -6,11 +6,11 @@
 # Customisable options #########################################################
 
 # Where shall we keep the backups on the netbooks?
-NETBOOK_DIR=/home/uamuzibora/server-backups
+NETBOOK_DIR=/home/uamuzibora/server-backup
 
 # Where are the backups stored on the server?  It is VERY IMPORTANT that there
 # is no trailing slash
-SERVER_DIR=/backups/data
+SERVER_DIR=/backup/data
 
 # What is the server's address?
 SERVER=192.168.1.2
@@ -26,7 +26,7 @@ FILES=/tmp/`date | openssl dgst -md5`
 
 # What are the files we want?
 ssh ${USER}@${SERVER} \
-    "find /backups/data -name '*\.tar\.bz2\.gpg' -mtime -31" \
+    "find /backup/data -name '*\.tar\.bz2\.gpg' -mtime -31" \
     > ${FILES}
 
 # Lets rsync them (hopefully only one file will be transferred, the most recent
@@ -37,7 +37,7 @@ rsync -aqz --files-from=${FILES} ${USER}@${SERVER}:/ ${NETBOOK_DIR}
 find ${NETBOOK_DIR} -name '*\.tar\.bz2\.gpg' -mtime +30 -exec rm -f {} \;
 
 # chmod these files
-chmod 400 ${NETBOOK_DIR}/backups/data/*.tar.bz2.gpg
+chmod 400 ${NETBOOK_DIR}/backup/data/*.tar.bz2.gpg
 
 # Tidy up time
 rm ${FILES}
