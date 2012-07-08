@@ -150,7 +150,13 @@ gpg --homedir ${GPGHOME} \
     --always-trust \
     ${TMP}/${TIMESTAMP}.tar.bz2
 
-# Move to data directory
+# Remove any files from the 'latest' directory (visible via Tomcat)
+rm ${ROOTDIR}/data/latest/*
+
+# Copy this file to the latest directory
+cp ${TMP}/${TIMESTAMP}.tar.bz2.gpg ${ROOTDIR}/data/latest
+
+# And also archive it by moving it to data directory
 mv ${TMP}/${TIMESTAMP}.tar.bz2.gpg ${ROOTDIR}/data
 
 # Remove temporary files
