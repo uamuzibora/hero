@@ -41,7 +41,7 @@ mysqldump -u ${MYSQLUSER} --password=${MYSQLPASS} \
 	  --compact \
 	  --single-transaction \
     --add-drop-table \
-    --skip-extended-insert \
+    --extended-insert \
     --order-by-primary \
     --default-character-set=latin1 \
     openmrs > ${TMP}/openmrs.sql
@@ -96,7 +96,7 @@ mysqldump -u ${MYSQLUSER} --password=${MYSQLPASS} \
     --compact \
     --single-transaction \
     --add-drop-table \
-    --skip-extended-insert \
+    --extended-insert \
     --order-by-primary \
     --default-character-set=latin1 \
     anonymiser > ${TMP}/anonymous.sql
